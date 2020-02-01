@@ -3,9 +3,7 @@
  */
 
 import '../css/style.css'; // loading css
-
 import 'phaser'; // loading Phaser with dependencies
-
 import _forEach from 'lodash-es/forEach';
 import * as logger from 'js-logger';
 
@@ -31,7 +29,14 @@ const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: 'container',     // parent id - '' means  no container
     width: gameConfig.size.x,
-    height: gameConfig.size.y
+    height: gameConfig.size.y,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.Center.CENTER_BOTH
+    },
+    physics: {
+        default: 'arcade'
+    }
 };
 
 /**

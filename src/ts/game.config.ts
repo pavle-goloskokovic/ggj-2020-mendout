@@ -34,7 +34,7 @@ export const size: {
     readonly x: number;
     readonly y: number;
 } = {
-    x: 1070,
+    x: 800,
     y: 600
 };
 /**
