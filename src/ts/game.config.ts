@@ -4,7 +4,7 @@ import * as logger from 'js-logger';
  * Game title used for page title tag.
  * @type {string}
  */
-export const title = 'Phaser TypeScript Boilerplate';
+export const title = 'Mendout';
 /**
  * Game description used for html page metadata.
  * @type {string}
