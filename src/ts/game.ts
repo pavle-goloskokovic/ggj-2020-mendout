@@ -40,12 +40,15 @@ const config: Phaser.Types.Core.GameConfig = {
             gravity: {
                 y: 0
             },
-            debug: true,
+            debug: !true,
             debugBodyColor: 0xffffff
         }
     },
     render: {
         pixelArt: true
+    },
+    audio: {
+        // disableWebAudio: true
     }
 };
 

@@ -12,6 +12,10 @@ export default class Preloader extends Phaser.Scene {
     {
         logger.info('Preloader enter');
 
+        this.load.audio('music', [require('../../assets/audio/music.mp3')]);
+        this.load.audio('fix', [require('../../assets/audio/fix.mp3')]);
+        this.load.audio('dead', [require('../../assets/audio/death.mp3')]);
+
         this.load.atlas('assets',
             require('../../assets/images/breakout.png'),
             require('../../assets/data/breakout.json')

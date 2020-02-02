@@ -22,16 +22,20 @@ export default class Game extends Phaser.Scene {
 
     highlightGraphic: Phaser.GameObjects.Graphics;
 
+    txt: Phaser.GameObjects.Text;
+
     repairData: {
         x: number;
         y: number;
         progress: 0;
         brick: Phaser.Physics.Matter.Image;
+        score: number;
     } = {
         x: -1,
         y: -1,
         progress: 0,
-        brick: null
+        brick: null,
+        score: 0
     };
 
     keys: {
@@ -48,6 +52,15 @@ export default class Game extends Phaser.Scene {
     create (): void
     {
         logger.info('Game enter');
+
+        this.txt = this.add.text(20, 10, '0', { fontFamily: 'Arial', fontSize: 48, color: '#FFFFFF' });
+
+        this.sound.stopAll();
+
+        this.sound.play('music', {
+            volume: 0.25,
+            loop: true
+        });
 
         this.keys = {
             A: this.input.keyboard.addKey('A'),
@@ -81,7 +94,7 @@ export default class Game extends Phaser.Scene {
         top.displayHeight = 32;
         top.displayWidth = 800;
 
-        this.cameras.main.setZoom(0.8);
+        this.cameras.main.setZoom(0.98);
 
         // bricks
 
@@ -293,7 +306,7 @@ export default class Game extends Phaser.Scene {
         const space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         space.on('down', () =>
         {
-            if(this.hero.y > 650)
+            if(!this.hero)
             {
                 this.scene.restart();
                 return;
@@ -321,6 +334,11 @@ export default class Game extends Phaser.Scene {
                 this.bricks.push(physicsBrick);
 
                 this.repairData.brick = physicsBrick;
+
+                this.repairData.score++;
+                this.txt.setText(this.repairData.score + '');
+
+                this.sound.play('fix');
             }
         });
 
@@ -541,6 +559,7 @@ export default class Game extends Phaser.Scene {
 
     gameOver ()
     {
+        this.sound.play('dead');
         const pos = new Vector2(this.hero.x, this.hero.y);
 
         this.hero.destroy();
