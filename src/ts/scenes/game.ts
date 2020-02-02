@@ -3,6 +3,7 @@ import _forEach from 'lodash-es/forEach';
 import _includes from 'lodash-es/includes';
 import _map from 'lodash-es/map';
 import _pull from 'lodash-es/pull';
+import Vector2 = Phaser.Math.Vector2;
 
 
 
@@ -165,6 +166,7 @@ export default class Game extends Phaser.Scene {
         });
         this.hero.setFriction(0.2, 0.2, 0);
         this.hero.displayWidth = this.hero.displayHeight = 30;
+        this.hero.setDepth(10);
 
         /*this.hero = this.physics.add.sprite(
             Phaser.Math.Between(100, 700),
@@ -254,6 +256,13 @@ export default class Game extends Phaser.Scene {
                     pairs[i].isActive = false;
                 }
 
+                if((bodyA === this.ball.body && bodyB === this.hero.body) ||
+                    (bodyA === this.hero.body && bodyB === this.ball.body))
+                {
+                    pairs[i].isActive = false;
+                    this.bricks.length = 0;
+                }
+
                 // TODO game over
             }
 
@@ -284,6 +293,11 @@ export default class Game extends Phaser.Scene {
         const space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         space.on('down', () =>
         {
+            if(this.hero.y > 650)
+            {
+                this.scene.restart();
+                return;
+            }
 
             this.repairData.progress += 0.11;
 
@@ -447,72 +461,106 @@ export default class Game extends Phaser.Scene {
 
         this.paddle.x -= (this.paddle.x - this.ball.x) / 10;
 
-        if(this.keys.left.isDown || this.keys.A.isDown)
+        if(this.hero)
         {
-            this.hero.setVelocityX(-4);
-        }
-        if(this.keys.right.isDown || this.keys.D.isDown)
-        {
-            this.hero.setVelocityX(4);
-        }
-
-        if(this.keys.up.isDown || this.keys.W.isDown)
-        {
-            this.hero.setVelocityY(-4);
-        }
-        if(this.keys.down.isDown || this.keys.S.isDown)
-        {
-            this.hero.setVelocityY(4);
-        }
-
-        this.highlightGraphic.clear();
-
-        const startX = 112 - 32;
-        const startY = 100 - 16;
-
-        if(this.hero.x > startX &&
-            this.hero.x < startX + 10 * 64
-            && this.hero.y > startY
-            && this.hero.y < startY + 6 * 32)
-        {
-            const x = Math.floor((this.hero.x - startX) / 64);
-            const y = Math.floor((this.hero.y - startY) / 32);
-
-            if(x !== this.repairData.x || y !== this.repairData.y)
+            if (this.keys.left.isDown || this.keys.A.isDown)
             {
+                this.hero.setVelocityX(-4);
+            }
+            if (this.keys.right.isDown || this.keys.D.isDown)
+            {
+                this.hero.setVelocityX(4);
+            }
+
+            if (this.keys.up.isDown || this.keys.W.isDown)
+            {
+                this.hero.setVelocityY(-4);
+            }
+            if (this.keys.down.isDown || this.keys.S.isDown)
+            {
+                this.hero.setVelocityY(4);
+            }
+
+            this.highlightGraphic.clear();
+
+            const startX = 112 - 32;
+            const startY = 100 - 16;
+
+            if (this.hero.x > startX &&
+                this.hero.x < startX + 10 * 64
+                && this.hero.y > startY
+                && this.hero.y < startY + 6 * 32)
+            {
+                const x = Math.floor((this.hero.x - startX) / 64);
+                const y = Math.floor((this.hero.y - startY) / 32);
+
+                if (x !== this.repairData.x || y !== this.repairData.y)
+                {
+                    this.repairData.progress = 0;
+                }
+
+                this.repairData.x = x;
+                this.repairData.y = y;
+
+                this.highlightGraphic.strokeRect(
+                    x * 64 + startX,
+                    y * 32 + startY,
+                    64, 32
+                );
+
+                this.highlightGraphic.fillRect(
+                    x * 64 + startX,
+                    y * 32 + startY,
+                    64 * this.repairData.progress, 32
+                );
+            }
+            else
+            {
+                this.repairData.x = -1;
+                this.repairData.y = -1;
                 this.repairData.progress = 0;
             }
 
-            this.repairData.x = x;
-            this.repairData.y = y;
-
-            this.highlightGraphic.strokeRect(
-                x * 64 + startX,
-                y * 32 + startY,
-                64, 32
-            );
-
-            this.highlightGraphic.fillRect(
-                x * 64 + startX,
-                y * 32 + startY,
-                64 * this.repairData.progress, 32
-            );
-        }
-        else
-        {
-            this.repairData.x = -1;
-            this.repairData.y = -1;
-            this.repairData.progress = 0;
-        }
-
-        if(this.repairData.brick)
-        {
-            if(Math.abs(this.repairData.brick.x - this.hero.x) > 42 ||
-            Math.abs(this.repairData.brick.y - this.hero.y) > 24)
+            if (this.repairData.brick)
             {
-                this.repairData.brick = null;
+                if (Math.abs(this.repairData.brick.x - this.hero.x) > 42 ||
+                    Math.abs(this.repairData.brick.y - this.hero.y) > 24)
+                {
+                    this.repairData.brick = null;
+                }
             }
+
         }
+
+        if(this.bricks.length === 0)
+        {
+            this.bricks.push(null);
+            this.gameOver();
+        }
+    }
+
+    gameOver ()
+    {
+        const pos = new Vector2(this.hero.x, this.hero.y);
+
+        this.hero.destroy();
+        this.hero = null;
+
+        const deadHero = this.add.sprite(pos.x, pos.y, 'assets', 'yellow2');
+        deadHero.displayWidth = deadHero.displayHeight = 30;
+        deadHero.setDepth(10);
+
+        this.ball.setVelocity(0);
+
+        this.tweens.add({
+            targets: deadHero,
+            y: { from: pos.y, to: pos.y + 1000 },
+            // alpha: { start: 0, to: 1 },
+            // alpha: 1,
+            // alpha: '+=1',
+            ease: 'Back.easeIn',       // 'Cubic', 'Elastic', 'Bounce', 'Back'
+            duration: 1500
+        });
     }
 
     hitHero (
