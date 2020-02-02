@@ -22,6 +22,10 @@ export default class Game extends Phaser.Scene {
         right: Phaser.Input.Keyboard.Key;
         up: Phaser.Input.Keyboard.Key;
         down: Phaser.Input.Keyboard.Key;
+        W: Phaser.Input.Keyboard.Key;
+        A: Phaser.Input.Keyboard.Key;
+        S: Phaser.Input.Keyboard.Key;
+        D: Phaser.Input.Keyboard.Key;
     };
 
     create (): void
@@ -29,10 +33,14 @@ export default class Game extends Phaser.Scene {
         logger.info('Game enter');
 
         this.keys = {
-            left: this.input.keyboard.addKey('A'),
-            right: this.input.keyboard.addKey('D'),
-            up: this.input.keyboard.addKey('W'),
-            down: this.input.keyboard.addKey('S')
+            A: this.input.keyboard.addKey('A'),
+            D: this.input.keyboard.addKey('D'),
+            W: this.input.keyboard.addKey('W'),
+            S: this.input.keyboard.addKey('S'),
+            left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
+            right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+            up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+            down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN)
         };
 
         //  Enable world bounds, but disable the floor
@@ -124,6 +132,12 @@ export default class Game extends Phaser.Scene {
             isStatic: true
         });
 
+        this.hero = this.matter.add.sprite(200, 550, 'assets', 'yellow2', {
+            // isStatic: true
+        });
+        this.hero.setFriction(0.2, 0.2, 0);
+        this.hero.displayWidth = this.hero.displayHeight = 30;
+
         /*this.hero = this.physics.add.sprite(
             Phaser.Math.Between(100, 700),
             350,
@@ -200,7 +214,17 @@ export default class Game extends Phaser.Scene {
 
                     pairs[i].isActive = false;
                 }
+
+                // hero
+
+                /*if(bodyA === this.hero.body || bodyB === this.hero.body)
+                {
+                    pairs[i].isActive = false;
+
+                    // TODO game over
+                }*/
             }
+
 
             // pairs[i].isActive = false;
         });
@@ -289,7 +313,8 @@ export default class Game extends Phaser.Scene {
 
         this.time.delayedCall(1000, () =>
         {
-            this.ball.setVelocity(-1.25, -5);
+            const xVel = 0.75 + Math.random() / 2 * (Math.random() < 0.5 ? 1 : -1);
+            this.ball.setVelocity(xVel, -5);
             this.ball.setData('onPaddle', false);
 
         }, null, this);
@@ -341,23 +366,23 @@ export default class Game extends Phaser.Scene {
 
         this.paddle.x -= (this.paddle.x - this.ball.x) / 10;
 
-        /*if(this.keys.left.isDown)
+        if(this.keys.left.isDown || this.keys.A.isDown)
         {
-            this.hero.setVelocityX(-400);
+            this.hero.setVelocityX(-4);
         }
-        if(this.keys.right.isDown)
+        if(this.keys.right.isDown || this.keys.D.isDown)
         {
-            this.hero.setVelocityX(400);
+            this.hero.setVelocityX(4);
         }
 
-        if(this.keys.up.isDown)
+        if(this.keys.up.isDown || this.keys.W.isDown)
         {
-            this.hero.setVelocityY(-400);
+            this.hero.setVelocityY(-4);
         }
-        if(this.keys.down.isDown)
+        if(this.keys.down.isDown || this.keys.S.isDown)
         {
-            this.hero.setVelocityY(400);
-        }*/
+            this.hero.setVelocityY(4);
+        }
     }
 
     hitHero (

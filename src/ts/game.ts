@@ -43,6 +43,9 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: true,
             debugBodyColor: 0xffffff
         }
+    },
+    render: {
+        pixelArt: true
     }
 };
 
