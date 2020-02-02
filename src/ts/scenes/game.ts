@@ -2,6 +2,8 @@ import * as logger from 'js-logger';
 import _forEach from 'lodash-es/forEach';
 import _includes from 'lodash-es/includes';
 import _map from 'lodash-es/map';
+import _pull from 'lodash-es/pull';
+
 
 
 /**
@@ -16,6 +18,20 @@ export default class Game extends Phaser.Scene {
     paddle: Phaser.Physics.Matter.Image;
 
     hero: Phaser.Physics.Matter.Sprite;
+
+    highlightGraphic: Phaser.GameObjects.Graphics;
+
+    repairData: {
+        x: number;
+        y: number;
+        progress: 0;
+        brick: Phaser.Physics.Matter.Image;
+    } = {
+        x: -1,
+        y: -1,
+        progress: 0,
+        brick: null
+    };
 
     keys: {
         left: Phaser.Input.Keyboard.Key;
@@ -132,6 +148,18 @@ export default class Game extends Phaser.Scene {
             isStatic: true
         });
 
+        this.highlightGraphic = this.add.graphics({
+            lineStyle: {
+                color: 0x00ff00,
+                width: 2,
+                alpha: 1
+            },
+            fillStyle: {
+                color: 0x00ff00,
+                alpha: 1
+            }
+        });
+
         this.hero = this.matter.add.sprite(200, 550, 'assets', 'yellow2', {
             // isStatic: true
         });
@@ -172,6 +200,7 @@ export default class Game extends Phaser.Scene {
                     const brick = (bodyA === this.ball.body ?
                         bodyB.gameObject : bodyA.gameObject) as Phaser.Physics.Matter.Image;
 
+                    _pull(this.bricks, brick);
                     brick.destroy();
                 }
 
@@ -217,16 +246,68 @@ export default class Game extends Phaser.Scene {
 
                 // hero
 
-                /*if(bodyA === this.hero.body || bodyB === this.hero.body)
+                if(this.repairData.brick && (
+                    (bodyA === this.hero.body && bodyB === this.repairData.brick.body) ||
+                    (bodyA === this.repairData.brick.body && bodyB === this.hero.body)
+                ))
                 {
                     pairs[i].isActive = false;
+                }
 
-                    // TODO game over
-                }*/
+                // TODO game over
             }
 
 
             // pairs[i].isActive = false;
+        });
+
+        /*this.matter.world.on('collisionend',  (event: any) =>
+        {
+            const pairs = event.pairs;
+
+            for (let i = 0; i < pairs.length; i++)
+            {
+                const bodyA = pairs[i].bodyA;
+                const bodyB = pairs[i].bodyB;
+
+                if(this.repairData.brick && (
+                    (bodyA === this.hero.body && bodyB === this.repairData.brick.body) ||
+                    (bodyA === this.repairData.brick.body && bodyB === this.hero.body)
+                ))
+                {
+                    pairs[i].isActive = false;
+                    this.repairData.brick = null;
+                }
+            }
+        });*/
+
+        const space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        space.on('down', () =>
+        {
+
+            this.repairData.progress += 0.11;
+
+            console.log(this.repairData.progress);
+            if(this.repairData.progress >= 1)
+            {
+                this.repairData.progress = 0;
+
+                const physicsBrick = this.matter.add.image(
+                    this.repairData.x * 64 + 112,
+                    this.repairData.y * 32 + 100,
+                    'assets',
+                    [ 'blue1', 'red1', 'green1', 'yellow1', 'silver1', 'purple1' ][this.repairData.y],
+                    {
+                        isStatic: true
+                    }
+                );
+                physicsBrick.displayHeight = 32;
+                physicsBrick.displayWidth = 64;
+
+                this.bricks.push(physicsBrick);
+
+                this.repairData.brick = physicsBrick;
+            }
         });
 
         //  Input events
@@ -382,6 +463,55 @@ export default class Game extends Phaser.Scene {
         if(this.keys.down.isDown || this.keys.S.isDown)
         {
             this.hero.setVelocityY(4);
+        }
+
+        this.highlightGraphic.clear();
+
+        const startX = 112 - 32;
+        const startY = 100 - 16;
+
+        if(this.hero.x > startX &&
+            this.hero.x < startX + 10 * 64
+            && this.hero.y > startY
+            && this.hero.y < startY + 6 * 32)
+        {
+            const x = Math.floor((this.hero.x - startX) / 64);
+            const y = Math.floor((this.hero.y - startY) / 32);
+
+            if(x !== this.repairData.x || y !== this.repairData.y)
+            {
+                this.repairData.progress = 0;
+            }
+
+            this.repairData.x = x;
+            this.repairData.y = y;
+
+            this.highlightGraphic.strokeRect(
+                x * 64 + startX,
+                y * 32 + startY,
+                64, 32
+            );
+
+            this.highlightGraphic.fillRect(
+                x * 64 + startX,
+                y * 32 + startY,
+                64 * this.repairData.progress, 32
+            );
+        }
+        else
+        {
+            this.repairData.x = -1;
+            this.repairData.y = -1;
+            this.repairData.progress = 0;
+        }
+
+        if(this.repairData.brick)
+        {
+            if(Math.abs(this.repairData.brick.x - this.hero.x) > 42 ||
+            Math.abs(this.repairData.brick.y - this.hero.y) > 24)
+            {
+                this.repairData.brick = null;
+            }
         }
     }
 
